@@ -20,15 +20,32 @@ namespace Sitecore.Support.sitecore.admin
 
       protected PlaceHolder _references;
 
+      protected Label ItemIdLabel { get; private set; }
+      
+      protected RadioButtonList _radioButtons;
+
       protected void Page_Load(object sender, EventArgs e)
       {
-        var itemID = Data.ID.Parse(Sitecore.Web.WebUtil.GetQueryString("itemID"));
-        var databaseName = Sitecore.Web.WebUtil.GetQueryString("db");
-        var database = Sitecore.Configuration.Factory.GetDatabase(databaseName);
-        Assert.IsNotNull(database, "Database can't be null");
+        this._radioButtons.SelectedIndex = -1;
 
-        this.RenderTable(this._referrers, Globals.LinkDatabase.GetItemReferrers(database.GetItem(itemID), true));
-        this.RenderTable(this._references, Globals.LinkDatabase.GetItemReferences(database.GetItem(itemID), true));
+        var itemID = Sitecore.Web.WebUtil.GetQueryString("itemid");
+        var databaseName = Sitecore.Web.WebUtil.GetQueryString("db");
+        
+        if (!String.IsNullOrEmpty(itemID) && !String.IsNullOrEmpty(databaseName))
+        {
+          this.ItemIdLabel.Text = itemID;
+          this._radioButtons.Items.FindByText(databaseName).Selected = true;
+        }
+        else
+        {
+          itemID = this.ItemIdLabel.Text;
+          databaseName = this._radioButtons.SelectedItem.Text;
+        }
+
+        var database = Configuration.Factory.GetDatabase(databaseName);
+        var item = database.GetItem(Data.ID.Parse(itemID));
+        this.RenderTable(this._referrers, Globals.LinkDatabase.GetItemReferrers(item, true));
+        this.RenderTable(this._references, Globals.LinkDatabase.GetItemReferences(item, true));
       }
 
       protected void RenderTable(PlaceHolder placeholder, ItemLink[] links)

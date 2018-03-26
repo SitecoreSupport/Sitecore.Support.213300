@@ -11,6 +11,7 @@ using Sitecore.Data.Items;
 using Sitecore.Links;
 using Sitecore.Shell;
 using System.Web.UI;
+using Sitecore.Diagnostics;
 
 namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
 {
@@ -37,10 +38,15 @@ namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
     protected override void OnLoad(EventArgs e)
     {
       this._showLink = false;
+
+      Assert.ArgumentNotNull(e, "e");
       base.OnLoad(e);
+      var item = UIUtil.GetItemFromQueryString(Context.ContentDatabase);
       if (this._showLink)
       {
-        this.Links.Controls.Add(new LiteralControl("<a href=\"\"></a>"));
+        this.Links.Controls.Add(
+          new LiteralControl(
+            $"<a href=\"sitecore\\admin\\ViewLinks.aspx?itemid={item.ID}&db={item.Database.Name}\"></a>"));
       }
     }
 
@@ -58,7 +64,7 @@ namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
           if (item2 == null || !this.IsHiddenItem(item2) || UserOptions.View.ShowHiddenItems)
           {
             list.Add(new Pair<Item, ItemLink>(item2, itemLink));
-            if (MaxNavigationLinks != 0 && list.Count < MaxNavigationLinks)
+            if (MaxNavigationLinks != 0 && list.Count >= MaxNavigationLinks)
             {
               this._showLink = true;
               break;
@@ -86,7 +92,7 @@ namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
           if (item2 == null || !this.IsHiddenItem(item2) || UserOptions.View.ShowHiddenItems)
           {
             list.Add(new Pair<Item, ItemLink>(item2, itemLink));
-            if (MaxNavigationLinks != 0 && list.Count < MaxNavigationLinks)
+            if (MaxNavigationLinks != 0 && list.Count >= MaxNavigationLinks)
             {
               this._showLink = true;
               break;
