@@ -10,11 +10,15 @@ using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Links;
 using Sitecore.Shell;
+using System.Web.UI;
 
 namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
 {
   public class GalleryLinksForm : Sitecore.Shell.Applications.ContentManager.Galleries.Links.GalleryLinksForm
   {
+
+    private bool _showLink = false;
+
     /// <summary>
     /// Maximum number of referrers or references that can be displayed in Content Editor Navigation->Links menu.
     /// The value is defined in the MaxNavigationLinks setting.
@@ -30,11 +34,21 @@ namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
       }
     }
 
+    protected override void OnLoad(EventArgs e)
+    {
+      this._showLink = false;
+      base.OnLoad(e);
+      if (this._showLink)
+      {
+        this.Links.Controls.Add(new LiteralControl("<a href=\"\"></a>"));
+      }
+    }
+
     protected override void ProcessReferrers(Item item, StringBuilder result)
     {
       ItemLink[] referrers = this.GetRefererers(item);
       List<Pair<Item, ItemLink>> list = new List<Pair<Item, ItemLink>>();
-      for (int i = 0; i < referrers.Length || (MaxNavigationLinks != 0 && list.Count < MaxNavigationLinks); i++)
+      for (int i = 0; i < referrers.Length; i++)
       {
         ItemLink itemLink = referrers[i];
         Database database = Factory.GetDatabase(itemLink.SourceDatabaseName, false);
@@ -44,6 +58,11 @@ namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
           if (item2 == null || !this.IsHiddenItem(item2) || UserOptions.View.ShowHiddenItems)
           {
             list.Add(new Pair<Item, ItemLink>(item2, itemLink));
+            if (MaxNavigationLinks != 0 && list.Count < MaxNavigationLinks)
+            {
+              this._showLink = true;
+              break;
+            }
           }
         }
       }
@@ -55,12 +74,11 @@ namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
 
     protected override void ProcessReferences(Item item, StringBuilder result)
     {
-      ItemLink[] arg_0D_0 = this.GetReferences(item);
+      ItemLink[] references = this.GetReferences(item);
       List<Pair<Item, ItemLink>> list = new List<Pair<Item, ItemLink>>();
-      ItemLink[] array = arg_0D_0;
-      for (int i = 0; i < array.Length || (MaxNavigationLinks != 0 && list.Count < MaxNavigationLinks); i++)
+      for (int i = 0; i < references.Length; i++)
       {
-        ItemLink itemLink = array[i];
+        ItemLink itemLink = references[i];
         Database database = Factory.GetDatabase(itemLink.TargetDatabaseName, false);
         if (database != null)
         {
@@ -68,6 +86,11 @@ namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
           if (item2 == null || !this.IsHiddenItem(item2) || UserOptions.View.ShowHiddenItems)
           {
             list.Add(new Pair<Item, ItemLink>(item2, itemLink));
+            if (MaxNavigationLinks != 0 && list.Count < MaxNavigationLinks)
+            {
+              this._showLink = true;
+              break;
+            }
           }
         }
       }

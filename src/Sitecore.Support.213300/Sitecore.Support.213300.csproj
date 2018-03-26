@@ -58,9 +58,23 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shell\Applications\ContentManager\Galleries\Links\GalleryLinksForm.cs" />
+    <Compile Include="sitecore\admin\ViewLinks.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="sitecore\admin\ViewLinks.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>ViewLinks.aspx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Config\Include\zzz\Sitecore.Support.213300.config" />
+    <Content Include="sitecore\admin\ViewLinks.aspx">
+      <Generator>SitecoreServerPageGenerator</Generator>
+      <LastGenOutput>ViewLinks.Designer.cs</LastGenOutput>
+    </Content>
+    <Content Include="sitecore\shell\Override\Gallery Links.xml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
