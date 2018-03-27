@@ -14,69 +14,130 @@ namespace Sitecore.Support.sitecore.admin
 {
   public class ViewLinks : AdminPage
   {
-    public class Links : AdminPage
+    protected PlaceHolder _referrers;
+
+    protected PlaceHolder _references;
+
+    protected TextBox _itemIdTextBox;
+
+    protected Label _errorMessage;
+
+    protected RadioButtonList _radioButtons;
+
+    protected override void OnInit(EventArgs e)
     {
-      protected PlaceHolder _referrers;
+      CheckSecurity(true);
+      base.OnInit(e);
 
-      protected PlaceHolder _references;
-
-      protected Label ItemIdLabel { get; private set; }
-      
-      protected RadioButtonList _radioButtons;
-
-      protected void Page_Load(object sender, EventArgs e)
+      var itemID = WebUtil.GetQueryString("itemid");
+      var databaseName = WebUtil.GetQueryString("db");
+      if (!String.IsNullOrEmpty(itemID) && !String.IsNullOrEmpty(databaseName))
       {
-        this._radioButtons.SelectedIndex = -1;
-
-        var itemID = Sitecore.Web.WebUtil.GetQueryString("itemid");
-        var databaseName = Sitecore.Web.WebUtil.GetQueryString("db");
-        
-        if (!String.IsNullOrEmpty(itemID) && !String.IsNullOrEmpty(databaseName))
+        this._itemIdTextBox.Text = itemID;
+        var radioButton = this._radioButtons.Items.FindByText(databaseName);
+        if (radioButton == null)
         {
-          this.ItemIdLabel.Text = itemID;
-          this._radioButtons.Items.FindByText(databaseName).Selected = true;
-        }
-        else
-        {
-          itemID = this.ItemIdLabel.Text;
-          databaseName = this._radioButtons.SelectedItem.Text;
+          this._errorMessage.Text = $"Database '{databaseName}' doesn't exist";
+          return;
         }
 
-        var database = Configuration.Factory.GetDatabase(databaseName);
-        var item = database.GetItem(Data.ID.Parse(itemID));
-        this.RenderTable(this._referrers, Globals.LinkDatabase.GetItemReferrers(item, true));
-        this.RenderTable(this._references, Globals.LinkDatabase.GetItemReferences(item, true));
+        radioButton.Selected = true;
       }
 
-      protected void RenderTable(PlaceHolder placeholder, ItemLink[] links)
+      this.DisplayLinks(itemID, databaseName);
+    }
+
+    protected void DisplayLinks(string itemID, string databaseName)
+    {
+      this._referrers.Controls.Clear();
+      this._references.Controls.Clear();
+      this._errorMessage.Text = String.Empty;
+      this._errorMessage.Attributes["style"] = "color:red; font-weight:bold;";
+      
+      if (String.IsNullOrEmpty(itemID))
       {
-        var htmlTable = HtmlUtil.CreateTable(0, 0);
-        htmlTable.Border = 1;
-        htmlTable.CellPadding = 4;
-        HtmlUtil.AddRow(htmlTable, new string[]
-        {
-          "Name",
-          "Path",
-          "ID"
-        });
+        this._errorMessage.Text = $"Item ID was not specified.";
+        return;
+      }
 
-        foreach (var link in links)
-        {
-          Database database = Configuration.Factory.GetDatabase(link.SourceDatabaseName, false);
-          var item = database.GetItem(link.SourceItemID);
-          string linkToItem =
-            "<a href=\"#\" onclick='javascript:return scForm.invoke(\"item:load(id={0}, language={1}, version={2})\")'>{3}</a>";
+      if (String.IsNullOrEmpty(databaseName))
+      {
+        this._errorMessage.Text = $"Database was not specified.";
+        return;
+      }
 
+      var database = Configuration.Factory.GetDatabase(databaseName);
+      if (database == null)
+      {
+        this._errorMessage.Text = $"Database '{databaseName}' doesn't exist";
+        return;
+      }
+
+      ID id;
+      if (!Data.ID.TryParse(itemID, out id))
+      {
+        this._errorMessage.Text = $"Specified id {itemID} is not a valid GUID";
+        return;
+      }
+      
+
+      var item = database.GetItem(id);
+      if (item == null)
+      {
+        this._errorMessage.Text = $"Item with ID '{itemID}' doesn't exist in database '{databaseName}'";
+        return;
+      }
+      
+      this.RenderLinks(this._referrers, Globals.LinkDatabase.GetItemReferrers(item, true), (link) => link.SourceItemID, (link) => link.SourceDatabaseName);
+      this.RenderLinks(this._references, item.Links.GetAllLinks(true, true), (link) => link.TargetItemID, (link) => link.TargetDatabaseName);
+    }
+    
+    protected void RenderLinks(PlaceHolder placeholder, ItemLink[] links, Func<ItemLink, ID> getID,
+      Func<ItemLink, string> getDatabase)
+    {
+      var htmlTable = HtmlUtil.CreateTable(0, 0);
+      htmlTable.Border = 1;
+      htmlTable.CellPadding = 4;
+      HtmlUtil.AddRow(htmlTable, new string[]
+      {
+        "ID",
+        "Name",
+        "Path",
+        "Language",
+        "Version"
+      });
+
+      foreach (var link in links)
+      {
+        Database database = Configuration.Factory.GetDatabase(getDatabase(link), false);
+        var item = database.GetItem(getID(link));
+        if (item != null)
+        {
           HtmlUtil.AddRow(htmlTable, new string[]
           {
+            item.ID.ToString(),
             item.Name,
-            String.Format(linkToItem, item.ID, item.Language, item.Version, item.Paths.Path),
-            item.ID.ToString()
+            item.Paths.Path,
+            link.SourceItemLanguage.Name,
+            link.SourceItemVersion.Number.ToString()
+            //String.Format(linkToItem, item.ID, item.Language, item.Version, item.Paths.Path),
           });
         }
-
-        placeholder.Controls.Add(htmlTable);
       }
+
+      placeholder.Controls.Add(htmlTable);
+    }
+
+    protected void GetLinksButton_Click(object sender, EventArgs e)
+    {
+      if (Request.QueryString.Count != 0)
+      {
+        Response.Redirect(WebUtil.RemoveQueryString(Request.Url.LocalPath));
+      }
+
+      var itemID = this._itemIdTextBox.Text;
+      var databaseName = this._radioButtons.SelectedItem?.Text;
+      this.DisplayLinks(itemID, databaseName);
     }
   }
 }

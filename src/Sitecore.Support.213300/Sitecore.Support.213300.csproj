@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Config\Include\zzz\Sitecore.Support.213300.config" />
+    <Content Include="Shell\Applications\ContentManager\Galleries\Links\Gallery Links.css" />
     <Content Include="sitecore\admin\ViewLinks.aspx">
       <Generator>SitecoreServerPageGenerator</Generator>
       <LastGenOutput>ViewLinks.Designer.cs</LastGenOutput>

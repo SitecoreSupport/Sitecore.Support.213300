@@ -46,7 +46,7 @@ namespace Sitecore.Support.Shell.Applications.ContentManager.Galleries.Links
       {
         this.Links.Controls.Add(
           new LiteralControl(
-            $"<a href=\"sitecore\\admin\\ViewLinks.aspx?itemid={item.ID}&db={item.Database.Name}\"></a>"));
+            $"<a class=\"viewLinksLink\" target=\"_blank\" href=\"/sitecore/admin/ViewLinks.aspx?itemid={item.ID}&db={item.Database.Name}\">See full links list</a>"));
       }
     }
 

@@ -8,22 +8,23 @@
 </head>
 <body>
 <form id="Form1" runat="server">
-    <div class="head">
-        <asp:Label runat="server" ID="ItemIdLabel">Item ID: </asp:Label>
-        <asp:TextBox runat="server" ID="itemIdTextBox" />
+    <div>
+        <asp:Label runat="server">Item ID: </asp:Label>
+        <asp:TextBox runat="server" ID="_itemIdTextBox" />
+        <asp:Button runat="server" ID="_getLinksButton" Text="Ok" OnClick="GetLinksButton_Click" />
         <asp:RadioButtonList ID="_radioButtons" runat="server">
             <asp:ListItem text="master" value="true" />
             <asp:ListItem text="web" value="false" />
             <asp:ListItem text="core" value="false" />
         </asp:RadioButtonList>
     </div>
-            
+    <asp:Label runat="server" ID="_errorMessage" />
     <div>
-        <asp:Label runat="server">Items that refer to the selected item:</asp:Label>
+        <asp:Label runat="server"><h3>Items that refer to the selected item:</h3></asp:Label>
         <asp:PlaceHolder id="_referrers" runat="server"></asp:PlaceHolder>
     </div>
     <div>
-        <asp:Label runat="server">Items that the selected item refer to:</asp:Label>
+        <asp:Label runat="server"><h3>Items that the selected item refer to:</h3></asp:Label>
         <asp:PlaceHolder id="_references" runat="server"></asp:PlaceHolder>
     </div>
 </form>
